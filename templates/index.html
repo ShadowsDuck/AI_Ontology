@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ontology Searching</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+
+  <body class="container mt-5">
+    <h2>Ontology Searching</h2>
+    <div class="mb-3">
+      <button id="lang-th" class="btn btn-primary">ไทย</button>
+      <button id="lang-en" class="btn btn-secondary">English</button>
+    </div>
+    <input
+      type="text"
+      id="search"
+      class="form-control"
+      placeholder="พิมพ์เพื่อค้นหา... (เชียงใหม่, นครสวรรค์, พิษณุโลก, พิจิตร, อุทัยธานี)"
+    />
+    <ul id="results" class="list-group mt-2"></ul>
+
+    <script>
+      $(document).ready(function () {
+        let currentLang = "th"; // ค่าเริ่มต้นภาษาไทย
+
+        // คำแปล
+        const translations = {
+          th: {
+            motto: "คำขวัญ",
+            flower: "ดอกไม้ประจำจังหวัด",
+            tree: "ต้นไม้ประจำจังหวัด",
+            traditionalName: "ชื่อเล่นประจำจังหวัด",
+            seal: "สัญลักษณ์ประจำจังหวัด",
+            latitude: "ละติจูด",
+            longitude: "ลองจิจูด",
+            placeholder:
+              "พิมพ์เพื่อค้นหา... (เชียงใหม่, นครสวรรค์, พิษณุโลก, พิจิตร, อุทัยธานี)",
+          },
+          en: {
+            motto: "Motto",
+            flower: "Flower",
+            tree: "Tree",
+            traditionalName: "TraditionalName",
+            seal: "Seal",
+            latitude: "Latitude",
+            longitude: "Longitude",
+            placeholder:
+              "Type to search... (Chiang Mai, Nakhon Sawan, Phitsanulok, Phichit, Uthai Thani)",
+          },
+        };
+
+        function updateResults(data) {
+          let items = data.map(
+            (item) => `
+              <li class="list-group-item p-3">
+                  <strong class="fs-4"><i class="bi bi-geo-alt-fill"></i> ${
+                    item.label
+                  }</strong><br>
+                  <small class="fs-5 text-muted"><i class="bi bi-chat-quote-fill"></i> ${
+                    translations[currentLang].motto
+                  }: ${
+              item.mottos.length > 0 ? item.mottos.join(", ") : "ไม่มีข้อมูล"
+            }</small><br>
+                  <small class="fs-5 text-primary"><i class="bi bi-flower1"></i> ${
+                    translations[currentLang].flower
+                  }: ${
+              item.flowers.length > 0 ? item.flowers.join(", ") : "ไม่มีข้อมูล"
+            }</small><br>
+                  <small class="fs-5 text-success"><i class="bi bi-tree-fill"></i> ${
+                    translations[currentLang].tree
+                  }: ${
+              item.trees.length > 0 ? item.trees.join(", ") : "ไม่มีข้อมูล"
+            }</small><br>
+                  <small class="fs-5 text-info"><i class="bi bi-tags-fill"></i> ${
+                    translations[currentLang].traditionalName
+                  }: ${
+              item.traditionalNames.length > 0
+                ? item.traditionalNames.join(", ")
+                : "ไม่มีข้อมูล"
+            }</small><br>
+                  <small class="fs-5 text-danger"><i class="bi bi-shield-fill"></i> ${
+                    translations[currentLang].seal
+                  }: ${
+              item.seals.length > 0 ? item.seals.join(", ") : "ไม่มีข้อมูล"
+            }</small><br>
+                  <small class="fs-5 text-warning"><i class="bi bi-compass-fill"></i> ${
+                    translations[currentLang].latitude
+                  }: ${item.latitude || "ไม่มีข้อมูล"}</small><br>
+                  <small class="fs-5 text-warning"><i class="bi bi-compass-fill"></i> ${
+                    translations[currentLang].longitude
+                  }: ${item.longitude || "ไม่มีข้อมูล"}</small><br>
+              </li>
+          `
+          );
+          $("#results").html(items.join(""));
+        }
+
+        // ฟังก์ชันเปลี่ยนภาษา
+        function switchLanguage(lang) {
+          currentLang = lang;
+          $("#search").trigger("input"); // อัปเดตผลการค้นหา
+
+          // ปรับ active state ของปุ่ม
+          if (lang === "th") {
+            $("#lang-th").addClass("btn-primary").removeClass("btn-secondary");
+            $("#lang-en").addClass("btn-secondary").removeClass("btn-primary");
+          } else {
+            $("#lang-en").addClass("btn-primary").removeClass("btn-secondary");
+            $("#lang-th").addClass("btn-secondary").removeClass("btn-primary");
+          }
+
+          // เปลี่ยน placeholder
+          $("#search").attr("placeholder", translations[lang].placeholder);
+        }
+
+        // เปลี่ยนภาษาเป็นไทย
+        $("#lang-th").click(function () {
+          switchLanguage("th");
+        });
+
+        // เปลี่ยนภาษาเป็นอังกฤษ
+        $("#lang-en").click(function () {
+          switchLanguage("en");
+        });
+
+        // ค้นหาเมื่อผู้ใช้พิมพ์
+        $("#search").on("input", function () {
+          let query = $(this).val().trim();
+
+          // ถ้าพิมพ์หมดแล้วลบจนว่าง ให้เคลียร์ผลลัพธ์และหยุดการทำงาน
+          if (query.length === 0) {
+            $("#results").empty(); // ล้างผลลัพธ์
+            return; // หยุดการทำงาน ไม่ต้องส่ง request ไปค้นหา
+          }
+
+          if (query.length > 1) {
+            $.getJSON(
+              `/search?q=${encodeURIComponent(query)}&lang=${currentLang}`,
+              function (data) {
+                if ($("#search").val().trim() === "") {
+                  // ถ้าผู้ใช้ลบข้อความหลังจาก request ถูกส่งออกไปแล้ว
+                  $("#results").empty();
+                  return;
+                }
+                updateResults(data);
+              }
+            ).fail(function (jqXHR, textStatus, errorThrown) {
+              console.error("Request failed: ", textStatus, errorThrown);
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
